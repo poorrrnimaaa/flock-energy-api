@@ -1,0 +1,395 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Flock Energy API Wrapper",
+    "version": "1.0.0",
+    "description": "A read-only REST API wrapper for the legacy Urja Meter Ops portal. Provides meter search, meter details, energy consumption readings, and location data."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "API health check"
+    },
+    {
+      "name": "Meters",
+      "description": "Meter search and details"
+    },
+    {
+      "name": "Consumption",
+      "description": "Meter energy readings"
+    },
+    {
+      "name": "Location",
+      "description": "Meter geographic coordinates"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Check API health",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "API is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "message": "Flock Energy API is running"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters": {
+      "get": {
+        "tags": ["Meters"],
+        "summary": "Search meters",
+        "operationId": "searchMeters",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Meter search query. Defaults to an empty string.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number. Values that do not parse as positive integers default to page 1; values below 1 are normalized to 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meter search results and pagination metadata returned by the portal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeterSearchResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unable to search meters or another upstream error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Unable to search meters"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/{id}": {
+      "get": {
+        "tags": ["Meters"],
+        "summary": "Retrieve a meter's details",
+        "operationId": "getMeterById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/MeterId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meter details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeterDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Meter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Meter not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unable to retrieve meter details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Unable to retrieve meter details"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/{id}/consumption": {
+      "get": {
+        "tags": ["Consumption"],
+        "summary": "Retrieve meter energy consumption",
+        "operationId": "getMeterConsumption",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/MeterId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Energy consumption readings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsumptionResponse"
+                },
+                "example": {
+                  "meterId": "EXAMPLE_METER",
+                  "data": [
+                    {
+                      "timestamp": "EXAMPLE_TIMESTAMP",
+                      "kwh": "EXAMPLE_VALUE",
+                      "kvah": "EXAMPLE_VALUE",
+                      "voltR": "EXAMPLE_VALUE"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unable to retrieve consumption or another upstream error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Unable to retrieve meter consumption"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/{id}/location": {
+      "get": {
+        "tags": ["Location"],
+        "summary": "Retrieve meter location",
+        "operationId": "getMeterLocation",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/MeterId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meter coordinates retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationResponse"
+                },
+                "example": {
+                  "meterId": "EXAMPLE_METER",
+                  "data": {
+                    "latitude": "EXAMPLE_LATITUDE",
+                    "longitude": "EXAMPLE_LONGITUDE"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unable to retrieve location or another upstream error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Unable to retrieve meter location"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "MeterId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Identifier of the meter",
+        "schema": {
+          "type": "string"
+        },
+        "example": "EXAMPLE_METER"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Flock Energy API is running"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          }
+        }
+      },
+      "MeterSearchResponse": {
+        "type": "object",
+        "description": "Portal search response, including meter records and pagination metadata.",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Meter"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Meter": {
+        "type": "object",
+        "properties": {
+          "meterId": {
+            "type": "string"
+          },
+          "serialNo": {
+            "type": "string"
+          },
+          "make": {
+            "type": "string"
+          },
+          "phaseType": {
+            "type": "string"
+          },
+          "installStatus": {
+            "type": "string"
+          },
+          "dtCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "MeterDetailResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Meter"
+          }
+        }
+      },
+      "ConsumptionResponse": {
+        "type": "object",
+        "required": ["meterId", "data"],
+        "properties": {
+          "meterId": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string"
+                },
+                "kwh": {
+                  "type": "string"
+                },
+                "kvah": {
+                  "type": "string"
+                },
+                "voltR": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "LocationResponse": {
+        "type": "object",
+        "required": ["meterId", "data"],
+        "properties": {
+          "meterId": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "string"
+              },
+              "longitude": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      }
+    }
+  }
+}
